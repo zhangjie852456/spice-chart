@@ -2,56 +2,43 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>ZRC Spice Pro - K线行情终端</title>
-    <!-- 固定版本，避免404 -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@klinecharts/pro@0.1.1/dist/klinecharts-pro.min.css">
+    <title>ZRC Spice Pro</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@klinecharts/pro/dist/klinecharts-pro.css">
     <style>
-        html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #1b1b1f; overflow: hidden; font-family: "Microsoft YaHei", sans-serif; }
+        html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #1b1b1f; }
         #chart-container { width: 100vw; height: 100vh; }
     </style>
 </head>
 <body>
 <div id="chart-container"></div>
 
-<!-- 只引入 Pro 版 -->
-<script src="https://cdn.jsdelivr.net/npm/@klinecharts/pro@0.1.1/dist/klinecharts-pro.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/klinecharts/dist/klinecharts.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@klinecharts/pro/dist/klinecharts-pro.umd.js"></script>
 
 <script>
-    // 直接执行（script 在 body 末尾）
-    if (typeof klinechartspro === 'undefined' || !klinechartspro.KLineChartPro) {
-        alert("KLineChart Pro 加载失败！请检查网络或 CDN。Console 查看错误。");
-        console.error("klinechartspro 对象：", klinechartspro);
-    } else {
-        const chart = new klinechartspro.KLineChartPro({
+    window.onload = function() {
+        // 3. 安全检查：如果库没加载好，直接弹窗报错（不让你再白等）
+        if (typeof klinecharts === 'undefined' || typeof klinechartsPro === 'undefined') {
+            alert("依赖库加载失败！请检查 CDN 链接或网络环境。");
+            return;
+        }
+
+        // 4. 严格按照官方 Pro 仓库的 UMD 初始化方式
+        const chartInstance = new klinechartsPro.DefaultKLineChart({
             container: document.getElementById('chart-container'),
-            symbol: {
-                ticker: 'STAR_ANISE',
-                name: '大红八角价格趋势 (USD/kg)'
-            },
-            period: {
-                multiplier: 1,
-                timespan: 'day',
-                text: '日线'
-            },
+            symbol: { ticker: 'STAR_ANISE', name: '大红八角' },
             datafeed: {
-                // 模拟搜索（必须返回数组）
-                searchSymbols: () => Promise.resolve([
-                    { ticker: 'STAR_ANISE', name: '大红八角' }
-                ]),
-                // 必须返回 Promise<数组>，每条数据格式严格
-                getHistoryKLineData: (symbol, period) => {
+                searchSymbols: () => Promise.resolve([{ ticker: 'STAR_ANISE', name: '大红八角' }]),
+                getHistoryKLineData: () => {
+                    // 模拟 200 条行情数据，确保一加载就有图
                     const data = [];
-                    let price = 8.5;  // 起始价
-                    for (let i = 0; i < 120; i++) {  // 120条更漂亮
-                        price += (Math.random() - 0.5) * 0.3;  // 随机波动
-                        const ts = Date.now() - (120 - i) * 86400000;  // 每天间隔
-                        data.push({
-                            timestamp: ts,
-                            open: price,
-                            high: price + Math.random() * 0.5,
-                            low: price - Math.random() * 0.5,
-                            close: price + (Math.random() - 0.5) * 0.2,
-                            volume: Math.floor(Math.random() * 20000 + 10000)
+                    let price = 50;
+                    const now = Date.now();
+                    for (let i = 0; i < 200; i++) {
+                        price += (Math.random() - 0.5) * 2;
+                        data.unshift({
+                            timestamp: now - i * 86400000,
+                            open: price, high: price + 1, low: price - 1, close: price + 0.3, volume: 100
                         });
                     }
                     return Promise.resolve(data);
@@ -60,11 +47,9 @@
                 unsubscribe: () => {}
             },
             theme: 'dark',
-            locale: 'zh-CN'  // 中文界面
+            locale: 'zh-CN'
         });
-
-        console.log("图表初始化成功！", chart);
-    }
+    };
 </script>
 </body>
 </html>
