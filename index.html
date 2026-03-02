@@ -2,48 +2,45 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>ZRC Spice Pro - K线行情</title>
-    <!-- 本地CSS -->
-    <link rel="stylesheet" href="/assets/css/klinecharts-pro.min.css">  <!-- 改成你的实际路径 -->
+    <title>ZRC Spice Pro</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@klinecharts/pro/dist/klinecharts-pro.css">
     <style>
-        html, body { margin:0; padding:0; width:100%; height:100%; background:#1b1b1f; overflow:hidden; font-family:"Microsoft YaHei",sans-serif; }
-        #container { width:100vw; height:100vh; }
+        html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #1b1b1f; }
+        #chart-container { width: 100vw; height: 100vh; }
     </style>
 </head>
 <body>
-<div id="container"></div>
+<div id="chart-container"></div>
 
-<!-- 本地JS -->
-<script src="/assets/js/klinecharts-pro.umd.min.js"></script>  <!-- 改成你的实际路径 -->
+<script src="https://cdn.jsdelivr.net/npm/klinecharts/dist/klinecharts.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@klinecharts/pro/dist/klinecharts-pro.umd.js"></script>
 
 <script>
-    // 检查加载
-    if (typeof klinechartspro === 'undefined' || !klinechartspro.KLineChartPro) {
-        alert("本地库加载失败！检查文件路径是否正确（F12 Console看404错误）。");
-        console.error("klinechartspro:", klinechartspro);
-    } else {
-        const chart = new klinechartspro.KLineChartPro({
-            container: document.getElementById('container'),
-            symbol: { ticker: 'STAR_ANISE', name: '大红八角 (USD/kg)' },
-            period: { multiplier: 1, timespan: 'day', text: '日线' },
+    window.onload = function() {
+        // 3. 安全检查：如果库没加载好，直接弹窗报错（不让你再白等）
+        if (typeof klinecharts === 'undefined' || typeof klinechartsPro === 'undefined') {
+            alert("依赖库加载失败！请检查 CDN 链接或网络环境。");
+            return;
+        }
+
+        // 4. 严格按照官方 Pro 仓库的 UMD 初始化方式
+        const chartInstance = new klinechartsPro.DefaultKLineChart({
+            container: document.getElementById('chart-container'),
+            symbol: { ticker: 'STAR_ANISE', name: '大红八角' },
             datafeed: {
                 searchSymbols: () => Promise.resolve([{ ticker: 'STAR_ANISE', name: '大红八角' }]),
                 getHistoryKLineData: () => {
+                    // 模拟 200 条行情数据，确保一加载就有图
                     const data = [];
-                    let price = 8.5;
+                    let price = 50;
+                    const now = Date.now();
                     for (let i = 0; i < 200; i++) {
-                        price += (Math.random() - 0.5) * 0.22;
-                        const ts = Date.now() - (200 - i) * 86400000;
-                        data.push({
-                            timestamp: ts,
-                            open: +price.toFixed(2),
-                            high: +(price + Math.random() * 0.45).toFixed(2),
-                            low: +(price - Math.random() * 0.45).toFixed(2),
-                            close: +(price + (Math.random() - 0.5) * 0.18).toFixed(2),
-                            volume: Math.floor(Math.random() * 45000 + 12000)
+                        price += (Math.random() - 0.5) * 2;
+                        data.unshift({
+                            timestamp: now - i * 86400000,
+                            open: price, high: price + 1, low: price - 1, close: price + 0.3, volume: 100
                         });
                     }
-                    console.log("数据生成完成：" + data.length + "条");
                     return Promise.resolve(data);
                 },
                 subscribe: () => {},
@@ -52,8 +49,7 @@
             theme: 'dark',
             locale: 'zh-CN'
         });
-        console.log("K线图初始化成功！");
-    }
+    };
 </script>
 </body>
 </html>
