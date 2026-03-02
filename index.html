@@ -22,13 +22,14 @@
 
 <div id="chart-container"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/klinecharts/dist/klinecharts.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@klinecharts/pro/dist/klinecharts-pro.umd.js"></script>
 
 <script>
     let isUnlocked = false;
 
-    // 1. 内置数据生成，彻底摆脱 fetch 报错
-    function generateMockData() {
+    // 模拟 20 个品种的数据，直接内置
+    function getMockData() {
         const data = [];
         let price = 40;
         const now = Date.now();
@@ -42,43 +43,40 @@
         return data;
     }
 
-    // 2. 这里的 P 大写是关键
-    const chartInstance = new klinechartsPro.DefaultKLineChart({
-        container: document.getElementById('chart-container'),
-        symbol: { ticker: 'STAR_ANISE', name: '大红八角 (Star Anise)' },
-        datafeed: {
-            searchSymbols: () => Promise.resolve([{ ticker: 'STAR_ANISE', name: '大红八角' }]),
-            getHistoryKLineData: () => Promise.resolve(generateMockData()),
-            subscribe: () => {},
-            unsubscribe: () => {}
-        },
-        theme: 'dark',
-        locale: 'zh-CN'
-    });
+    // 确保 DOM 加载后初始化
+    window.onload = function() {
+        // 3. 构造函数必须匹配 UMD 名称
+        const chartInstance = new klinechartsPro.DefaultKLineChart({
+            container: document.getElementById('chart-container'),
+            symbol: { ticker: 'STAR_ANISE', name: '大红八角 (Star Anise)' },
+            datafeed: {
+                searchSymbols: () => Promise.resolve([{ ticker: 'STAR_ANISE', name: '大红八角' }]),
+                getHistoryKLineData: () => Promise.resolve(getMockData()),
+                subscribe: () => {},
+                unsubscribe: () => {}
+            },
+            theme: 'dark',
+            locale: 'zh-CN'
+        });
 
-    // 3. 稳健的遮罩逻辑：避开 getWidget 报错
-    function checkLock() {
-        if (isUnlocked) return;
-        const chart = chartInstance.getWidget().getChart(); // 在这里获取底层实例
-        const dataList = chart.getDataList();
-        if (dataList.length === 0) return;
+        // 4. 稳健的遮罩逻辑
+        const chart = chartInstance.getWidget().getChart();
+        chart.subscribeAction('onVisibleRangeChange', (range) => {
+            if (isUnlocked || !range) return;
+            const dataList = chart.getDataList();
+            if (dataList.length === 0) return;
 
-        const visibleRange = chart.getVisibleRange();
-        const lastData = dataList[dataList.length - 1];
-        const lockThreshold = lastData.timestamp - (60 * 24 * 60 * 60 * 1000);
+            const lastData = dataList[dataList.length - 1];
+            const lockThreshold = lastData.timestamp - (60 * 24 * 60 * 60 * 1000);
+            const rightBar = dataList[Math.min(Math.floor(range.to), dataList.length - 1)];
 
-        // 如果可视区域的右侧时间超过了锁定阈值，弹窗
-        if (dataList[Math.min(Math.floor(visibleRange.to), dataList.length - 1)].timestamp > lockThreshold) {
-            document.getElementById('pay-mask').style.display = 'flex';
-        } else {
-            document.getElementById('pay-mask').style.display = 'none';
-        }
-    }
-
-    // 延迟一秒绑定，防止图表还没加载完就计算
-    setTimeout(() => {
-        chartInstance.getWidget().getChart().subscribeAction('onVisibleRangeChange', checkLock);
-    }, 1000);
+            if (rightBar && rightBar.timestamp > lockThreshold) {
+                document.getElementById('pay-mask').style.display = 'flex';
+            } else {
+                document.getElementById('pay-mask').style.display = 'none';
+            }
+        });
+    };
 
     function unlock() {
         isUnlocked = true;
