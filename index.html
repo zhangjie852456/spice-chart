@@ -4,54 +4,39 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ZRC Spice Pro</title>
-    <link rel="stylesheet" href="https://unpkg.com/@klinecharts/pro/dist/klinecharts-pro.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@klinecharts/pro/dist/klinecharts-pro.css">
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #fff; }
-        #chart-container { width: 100vw; height: 100vh; }
-        #status { position: fixed; top: 10px; left: 10px; z-index: 999; color: red; font-size: 12px; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background-color: #ffffff; }
+        #chart { width: 100vw; height: 100vh; }
     </style>
 </head>
 <body>
-    <div id="status">正在准备引擎...</div>
-    <div id="chart-container"></div>
-
-    <script src="https://unpkg.com/klinecharts/dist/klinecharts.min.js"></script>
-    <script src="https://unpkg.com/@klinecharts/pro/dist/klinecharts-pro.umd.js"></script>
-
+    <div id="chart"></div>
+    <script src="https://cdn.jsdelivr.net/npm/@klinecharts/pro/dist/klinecharts-pro.umd.js"></script>
     <script>
-        // 确保所有库文件加载完毕
-        window.onload = function() {
-            document.getElementById('status').innerHTML = '引擎就绪，正在绘制 20 品种图表...';
-            
-            // 3. 您的 20+ 品种名单框架
-            const SYMBOLS = [
-                { symbol: 'STAR', name: '大红八角 (Star Anise)', exchange: 'YULIN', market: 'SPICE', ticker: 'STAR_ANISE' },
-                { symbol: 'CINN', name: '肉桂 (Cinnamon)', exchange: 'YULIN', market: 'SPICE', ticker: 'CINNAMON' }
-                // 剩下的品种名字，等出图了咱们再往里填
-            ];
+        // 3. 准备您的 20 多个品种框架
+        const SYMBOLS = [
+            { symbol: 'STAR', name: '大红八角 (Star Anise)', ticker: 'STAR_ANISE' },
+            { symbol: 'CINN', name: '肉桂 (Cinnamon)', ticker: 'CINNAMON' }
+        ];
 
-            try {
-                // 4. 初始化 Pro 图表
-                const chart = new klinechartspro.KLineChartPro({
-                    container: document.getElementById('chart-container'),
-                    symbol: SYMBOLS[0],
-                    datafeed: {
-                        searchSymbols: () => Promise.resolve(SYMBOLS),
-                        getHistoryKLineData: () => Promise.resolve([
-                            { timestamp: 1704067200000, open: 30, high: 35, low: 29, close: 33, volume: 1000 },
-                            { timestamp: 1704153600000, open: 33, high: 38, low: 32, close: 36, volume: 1200 }
-                        ]),
-                        subscribe: () => {},
-                        unsubscribe: () => {}
-                    },
-                    theme: 'light',
-                    locale: 'zh-CN'
-                });
-                document.getElementById('status').style.display = 'none'; // 成功后隐藏提示
-            } catch (e) {
-                document.getElementById('status').innerHTML = '出错啦：' + e.message;
-            }
-        };
+        // 4. 初始化
+        const chart = new klinechartspro.KLineChartPro({
+            container: document.getElementById('chart'),
+            symbol: SYMBOLS[0],
+            datafeed: {
+                searchSymbols: () => Promise.resolve(SYMBOLS),
+                getHistoryKLineData: () => Promise.resolve([
+                    { timestamp: 1704067200000, open: 30, high: 35, low: 29, close: 33, volume: 1000 }
+                ]),
+                subscribe: () => {},
+                unsubscribe: () => {}
+            },
+            theme: 'light',
+            locale: 'zh-CN',
+            drawingBar: true, // 开启侧边工具栏
+            symbolSearch: true // 开启搜索框，方便切换 20 多个品种
+        });
     </script>
 </body>
 </html>
