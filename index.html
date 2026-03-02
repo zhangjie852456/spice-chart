@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>ZRC Spice Market Insight Pro</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@klinecharts/pro/dist/klinecharts-pro.css">
+    <script src="https://cdn.jsdelivr.net/npm/@klinecharts/pro/dist/klinecharts-pro.umd.js"></script>
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; }
+        #chart-container { width: 100%; height: 100vh; }
+    </style>
+</head>
+<body>
+    <div id="chart-container"></div>
+    <script>
+        // 负责人，这里就是你 20 多个品种的数据中心
+        const SPICE_DATA = {
+            'STAR_ANISE': [
+                { timestamp: 1704067200000, open: 32.5, high: 35.0, low: 32.0, close: 34.0, volume: 1000 },
+                { timestamp: 1704153600000, open: 34.0, high: 36.5, low: 33.5, close: 35.8, volume: 1200 }
+            ],
+            'CINNAMON': [
+                { timestamp: 1704067200000, open: 18.2, high: 19.5, low: 18.0, close: 19.0, volume: 800 },
+                { timestamp: 1704153600000, open: 19.0, high: 20.2, low: 18.8, close: 19.8, volume: 950 }
+            ]
+            // 剩下的 20 个品种，回头咱们直接往这里加就行
+        };
+
+        class SpiceDatafeed {
+            searchSymbols(search) {
+                // 支持搜索 20 多个品种
+                return Promise.resolve([
+                    { symbol: 'STAR', name: '大红八角 (Star Anise)', exchange: 'YULIN', ticker: 'STAR_ANISE' },
+                    { symbol: 'CINN', name: '肉桂 (Cinnamon)', exchange: 'YULIN', ticker: 'CINNAMON' }
+                ]);
+            }
+            getHistoryKLineData(symbol, period, from, to) {
+                const data = SPICE_DATA[symbol.ticker] || [];
+                return Promise.resolve(data);
+            }
+            subscribe() {}
+            unsubscribe() {}
+        }
+
+        const chart = new klinechartspro.KLineChartPro({
+            container: document.getElementById('chart-container'),
+            symbol: { exchange: 'YULIN', market: 'SPICE', name: '大红八角', ticker: 'STAR_ANISE', priceCurrency: 'CNY' },
+            datafeed: new SpiceDatafeed(),
+            theme: 'light',
+            locale: 'zh-CN',
+            drawingBar: true, // 开启侧边画线工具，方便客户分析
+            symbolSearch: true // 开启搜索，方便在 20 多个品种间切换
+        });
+    </script>
+</body>
+</html>
