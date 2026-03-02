@@ -14,29 +14,29 @@
     <div id="chart"></div>
     <script src="https://cdn.jsdelivr.net/npm/@klinecharts/pro/dist/klinecharts-pro.umd.js"></script>
     <script>
-        // 3. 准备您的 20 多个品种框架
-        const SYMBOLS = [
-            { symbol: 'STAR', name: '大红八角 (Star Anise)', ticker: 'STAR_ANISE' },
-            { symbol: 'CINN', name: '肉桂 (Cinnamon)', ticker: 'CINNAMON' }
-        ];
+        // 等待库完全加载
+        window.onload = function() {
+            const SYMBOLS = [
+                { symbol: 'STAR', name: '大红八角 (Star Anise)', ticker: 'STAR_ANISE' },
+                { symbol: 'CINN', name: '肉桂 (Cinnamon)', ticker: 'CINNAMON' }
+            ];
 
-        // 4. 初始化
-        const chart = new klinechartspro.KLineChartPro({
-            container: document.getElementById('chart'),
-            symbol: SYMBOLS[0],
-            datafeed: {
-                searchSymbols: () => Promise.resolve(SYMBOLS),
-                getHistoryKLineData: () => Promise.resolve([
-                    { timestamp: 1704067200000, open: 30, high: 35, low: 29, close: 33, volume: 1000 }
-                ]),
-                subscribe: () => {},
-                unsubscribe: () => {}
-            },
-            theme: 'light',
-            locale: 'zh-CN',
-            drawingBar: true, // 开启侧边工具栏
-            symbolSearch: true // 开启搜索框，方便切换 20 多个品种
-        });
+            // 注意这里：klinechartsPro 的 P 必须大写
+            const chart = new klinechartsPro.DefaultKLineChart({
+                container: document.getElementById('chart'),
+                symbol: SYMBOLS[0],
+                datafeed: {
+                    searchSymbols: () => Promise.resolve(SYMBOLS),
+                    getHistoryKLineData: () => Promise.resolve([
+                        { timestamp: 1704067200000, open: 30, high: 35, low: 29, close: 33, volume: 1000 }
+                    ]),
+                    subscribe: () => {},
+                    unsubscribe: () => {}
+                },
+                theme: 'light',
+                locale: 'zh-CN'
+            });
+        };
     </script>
 </body>
 </html>
