@@ -2,50 +2,58 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>ZRC Spice Pro</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@klinecharts/pro/dist/klinecharts-pro.css">
+    <title>ZRC Spice Pro - K线行情</title>
+    <!-- 本地CSS -->
+    <link rel="stylesheet" href="/assets/css/klinecharts-pro.min.css">  <!-- 改成你的实际路径 -->
     <style>
-        html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #1b1b1f; overflow: hidden; }
-        #chart-container { width: 100vw; height: 100vh; }
+        html, body { margin:0; padding:0; width:100%; height:100%; background:#1b1b1f; overflow:hidden; font-family:"Microsoft YaHei",sans-serif; }
+        #container { width:100vw; height:100vh; }
     </style>
 </head>
 <body>
-    <div id="chart-container"></div>
+<div id="container"></div>
 
-    <script src="https://cdn.jsdelivr.net/npm/klinecharts/dist/klinecharts.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@klinecharts/pro/dist/klinecharts-pro.umd.js"></script>
+<!-- 本地JS -->
+<script src="/assets/js/klinecharts-pro.umd.min.js"></script>  <!-- 改成你的实际路径 -->
 
-    <script>
-        window.onload = function() {
-            // 3. 极其简易的初始化，先出图，再谈别的
-            try {
-                const chartInstance = new klinechartsPro.DefaultKLineChart({
-                    container: document.getElementById('chart-container'),
-                    symbol: { ticker: 'STAR_ANISE', name: '大红八角' },
-                    datafeed: {
-                        searchSymbols: () => Promise.resolve([{ ticker: 'STAR_ANISE', name: '大红八角' }]),
-                        getHistoryKLineData: () => {
-                            const data = [];
-                            let price = 60;
-                            for (let i = 0; i < 150; i++) {
-                                price += Math.random() - 0.5;
-                                data.push({
-                                    timestamp: Date.now() - (150 - i) * 86400000,
-                                    open: price, high: price + 1, low: price - 1, close: price + 0.2, volume: 100
-                                });
-                            }
-                            return Promise.resolve(data);
-                        },
-                        subscribe: () => {},
-                        unsubscribe: () => {}
-                    },
-                    theme: 'dark'
-                });
-            } catch (e) {
-                console.error("初始化报错:", e);
-                alert("库加载了但初始化失败，请检查控制台红字");
-            }
-        };
-    </script>
+<script>
+    // 检查加载
+    if (typeof klinechartspro === 'undefined' || !klinechartspro.KLineChartPro) {
+        alert("本地库加载失败！检查文件路径是否正确（F12 Console看404错误）。");
+        console.error("klinechartspro:", klinechartspro);
+    } else {
+        const chart = new klinechartspro.KLineChartPro({
+            container: document.getElementById('container'),
+            symbol: { ticker: 'STAR_ANISE', name: '大红八角 (USD/kg)' },
+            period: { multiplier: 1, timespan: 'day', text: '日线' },
+            datafeed: {
+                searchSymbols: () => Promise.resolve([{ ticker: 'STAR_ANISE', name: '大红八角' }]),
+                getHistoryKLineData: () => {
+                    const data = [];
+                    let price = 8.5;
+                    for (let i = 0; i < 200; i++) {
+                        price += (Math.random() - 0.5) * 0.22;
+                        const ts = Date.now() - (200 - i) * 86400000;
+                        data.push({
+                            timestamp: ts,
+                            open: +price.toFixed(2),
+                            high: +(price + Math.random() * 0.45).toFixed(2),
+                            low: +(price - Math.random() * 0.45).toFixed(2),
+                            close: +(price + (Math.random() - 0.5) * 0.18).toFixed(2),
+                            volume: Math.floor(Math.random() * 45000 + 12000)
+                        });
+                    }
+                    console.log("数据生成完成：" + data.length + "条");
+                    return Promise.resolve(data);
+                },
+                subscribe: () => {},
+                unsubscribe: () => {}
+            },
+            theme: 'dark',
+            locale: 'zh-CN'
+        });
+        console.log("K线图初始化成功！");
+    }
+</script>
 </body>
 </html>
