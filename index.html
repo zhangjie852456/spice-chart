@@ -2,104 +2,51 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>ZRC Spice Pro 终端</title>
+    <title>ZRC Spice Pro</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@klinecharts/pro/dist/klinecharts-pro.css">
     <style>
-        html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #1b1b1f; overflow: hidden; }
-        /* 关键：强制容器必须有物理高度 */
-        #chart-container { width: 100vw; height: 100vh; position: relative; }
-        
-        #pay-mask { 
-            position: absolute; right: 0; top: 0; width: 280px; height: 100%; 
-            background: rgba(27,27,31,0.92); backdrop-filter: blur(10px); 
-            border-left: 2px solid #f54346; z-index: 1000; 
-            display: none; flex-direction: column; justify-content: center; 
-            align-items: center; color: #fff; font-family: sans-serif; 
-        }
-        #pay-mask button { 
-            margin-top: 20px; background: #f54346; border: none; 
-            color: white; padding: 12px 30px; border-radius: 6px; 
-            cursor: pointer; font-weight: bold; 
-        }
+        html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #1b1b1f; }
+        #chart-container { width: 100vw; height: 100vh; }
     </style>
 </head>
 <body>
-
-<div id="pay-mask">
-    <div style="font-size:20px;font-weight:bold;">🔒 核心行情已锁定</div>
-    <div style="font-size:14px;color:#aaa;margin-top:10px;">需解锁查看近 60 天趋势</div>
-    <button onclick="unlock()">立即解锁</button>
-</div>
-
 <div id="chart-container"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/klinecharts@latest/dist/klinecharts.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@klinecharts/pro@latest/dist/klinecharts-pro.umd.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/klinecharts/dist/klinecharts.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@klinecharts/pro/dist/klinecharts-pro.umd.js"></script>
 
 <script>
-    let isUnlocked = false;
-
-    // 预设香料品种及模拟数据
-    const SYMBOLS = [
-        { ticker: 'STAR_ANISE', name: '大红八角 (Star Anise)' },
-        { ticker: 'CINNAMON', name: '肉桂 (Cinnamon)' }
-    ];
-
-    function generateData() {
-        const data = [];
-        let price = 50;
-        const now = Date.now();
-        for (let i = 0; i < 400; i++) {
-            price += (Math.random() - 0.5) * 2;
-            data.unshift({
-                timestamp: now - i * 24 * 60 * 60 * 1000,
-                open: price, high: price + 1.5, low: price - 1.5, close: price + 0.6, volume: 500
-            });
-        }
-        return data;
-    }
-
-    // 3. 稳健启动逻辑
     window.onload = function() {
+        // 检查库是否真的进来了
         if (typeof klinechartsPro === 'undefined') {
-            console.error("Pro库未加载成功，请检查网络！");
+            alert("基础库加载失败，请检查网络是否能访问 cdn.jsdelivr.net");
             return;
         }
 
         const chartInstance = new klinechartsPro.DefaultKLineChart({
             container: document.getElementById('chart-container'),
-            symbol: SYMBOLS[0],
+            symbol: { ticker: 'STAR_ANISE', name: '大红八角' },
             datafeed: {
-                searchSymbols: () => Promise.resolve(SYMBOLS),
-                getHistoryKLineData: () => Promise.resolve(generateData()),
+                searchSymbols: () => Promise.resolve([{ ticker: 'STAR_ANISE', name: '大红八角' }]),
+                getHistoryKLineData: () => {
+                    // 直接生成 100 条数据，确保必出图
+                    const data = [];
+                    let price = 50;
+                    for (let i = 0; i < 100; i++) {
+                        price += Math.random() - 0.5;
+                        data.push({
+                            timestamp: Date.now() - (100 - i) * 86400000,
+                            open: price, high: price + 1, low: price - 1, close: price + 0.2, volume: 100
+                        });
+                    }
+                    return Promise.resolve(data);
+                },
                 subscribe: () => {},
                 unsubscribe: () => {}
             },
-            theme: 'dark',
-            locale: 'zh-CN'
-        });
-
-        // 4. 遮罩逻辑绑定
-        const chart = chartInstance.getWidget().getChart();
-        chart.subscribeAction('onVisibleRangeChange', (range) => {
-            if (isUnlocked || !range) return;
-            const dataList = chart.getDataList();
-            if (dataList.length === 0) return;
-            const lastData = dataList[dataList.length - 1];
-            const lockThreshold = lastData.timestamp - (60 * 24 * 60 * 60 * 1000);
-            const rightBar = dataList[Math.min(Math.floor(range.to), dataList.length - 1)];
-            if (rightBar && rightBar.timestamp > lockThreshold) {
-                document.getElementById('pay-mask').style.display = 'flex';
-            } else {
-                document.getElementById('pay-mask').style.display = 'none';
-            }
+            theme: 'dark'
         });
     };
-
-    function unlock() {
-        isUnlocked = true;
-        document.getElementById('pay-mask').style.display = 'none';
-    }
 </script>
 </body>
 </html>
