@@ -2,45 +2,50 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>ZRC Spice Pro</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@klinecharts/pro/dist/klinecharts-pro.css">
+    <title>ZRC Spice Pro - K线行情终端</title>
+    <!-- 直接引用GitHub raw源文件 -->
+    <link rel="stylesheet" href="https://raw.githubusercontent.com/klinecharts/pro/main/dist/klinecharts-pro.min.css">
     <style>
-        html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #1b1b1f; }
-        #chart-container { width: 100vw; height: 100vh; }
+        html, body { margin:0; padding:0; width:100%; height:100%; background:#1b1b1f; overflow:hidden; font-family:"Microsoft YaHei",sans-serif; }
+        #container { width:100vw; height:100vh; }
     </style>
 </head>
 <body>
-<div id="chart-container"></div>
+<div id="container"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/klinecharts/dist/klinecharts.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@klinecharts/pro/dist/klinecharts-pro.umd.js"></script>
+<!-- GitHub raw JS -->
+<script src="https://raw.githubusercontent.com/klinecharts/pro/main/dist/klinecharts-pro.umd.min.js"></script>
 
 <script>
-    window.onload = function() {
-        // 3. 安全检查：如果库没加载好，直接弹窗报错（不让你再白等）
-        if (typeof klinecharts === 'undefined' || typeof klinechartsPro === 'undefined') {
-            alert("依赖库加载失败！请检查 CDN 链接或网络环境。");
-            return;
-        }
+    // 调试全局对象
+    console.log("klinechartspro 对象：", window.klinechartspro);
 
-        // 4. 严格按照官方 Pro 仓库的 UMD 初始化方式
-        const chartInstance = new klinechartsPro.DefaultKLineChart({
-            container: document.getElementById('chart-container'),
-            symbol: { ticker: 'STAR_ANISE', name: '大红八角' },
+    if (typeof window.klinechartspro === 'undefined' || !window.klinechartspro.KLineChartPro) {
+        alert("GitHub raw库加载失败！\n1. 检查F12 Network是否有200 OK（内容大小应>100KB）\n2. 尝试VPN或换浏览器\n3. 或下载文件上传Hostinger本地化");
+        console.error("加载失败，klinechartspro：", window.klinechartspro);
+    } else {
+        const chart = new window.klinechartspro.KLineChartPro({
+            container: document.getElementById('container'),
+            symbol: { ticker: 'STAR_ANISE', name: '大红八角价格趋势 (USD/kg)' },
+            period: { multiplier: 1, timespan: 'day', text: '日线' },
             datafeed: {
                 searchSymbols: () => Promise.resolve([{ ticker: 'STAR_ANISE', name: '大红八角' }]),
                 getHistoryKLineData: () => {
-                    // 模拟 200 条行情数据，确保一加载就有图
                     const data = [];
-                    let price = 50;
-                    const now = Date.now();
-                    for (let i = 0; i < 200; i++) {
-                        price += (Math.random() - 0.5) * 2;
-                        data.unshift({
-                            timestamp: now - i * 86400000,
-                            open: price, high: price + 1, low: price - 1, close: price + 0.3, volume: 100
+                    let price = 8.5;
+                    for (let i = 0; i < 180; i++) {  // 180条数据，曲线更自然
+                        price += (Math.random() - 0.5) * 0.18;
+                        const ts = Date.now() - (180 - i) * 86400000;
+                        data.push({
+                            timestamp: ts,
+                            open: +price.toFixed(2),
+                            high: +(price + Math.random() * 0.35).toFixed(2),
+                            low: +(price - Math.random() * 0.35).toFixed(2),
+                            close: +(price + (Math.random() - 0.5) * 0.15).toFixed(2),
+                            volume: Math.floor(Math.random() * 38000 + 9000)
                         });
                     }
+                    console.log("模拟数据生成完成：" + data.length + "条");
                     return Promise.resolve(data);
                 },
                 subscribe: () => {},
@@ -49,7 +54,9 @@
             theme: 'dark',
             locale: 'zh-CN'
         });
-    };
+
+        console.log("KLineChartPro 初始化成功！实例：", chart);
+    }
 </script>
 </body>
 </html>
