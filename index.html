@@ -2,29 +2,29 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>ZRC 香料行情终端 · Pro</title>
+    <title>ZRC 香料行情终端 Pro</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@klinecharts/pro/dist/klinecharts-pro.css">
     <style>
         html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #1b1b1f; overflow: hidden; font-family: "Microsoft YaHei", sans-serif; }
         #toolbar { height: 44px; background: #1f1f24; display: flex; align-items: center; padding: 0 12px; border-bottom: 1px solid #333; }
-        #symbol { background: #2b2b30; color: #fff; border: 1px solid #444; padding: 5px 8px; border-radius: 4px; }
+        #symbol-select { background: #2b2b30; color: #fff; border: 1px solid #444; padding: 5px 8px; border-radius: 4px; outline: none; cursor: pointer; }
         #container { width: 100%; height: calc(100% - 44px); }
         /* 遮罩逻辑 */
-        #pay-mask { position: absolute; right: 0; top: 44px; width: 260px; height: calc(100% - 44px); background: rgba(27,27,31,0.7); backdrop-filter: blur(10px); border-left: 2px solid #f54346; z-index: 1000; display: none; flex-direction: column; justify-content: center; align-items: center; color: #fff; }
-        #pay-mask button { margin-top: 18px; background: #f54346; border: none; color: white; padding: 10px 24px; border-radius: 6px; cursor: pointer; }
+        #pay-mask { position: absolute; right: 0; top: 44px; width: 260px; height: calc(100% - 44px); background: rgba(27,27,31,0.8); backdrop-filter: blur(10px); border-left: 2px solid #f54346; z-index: 1000; display: none; flex-direction: column; justify-content: center; align-items: center; color: #fff; }
+        #pay-mask button { margin-top: 18px; background: #f54346; border: none; color: white; padding: 10px 24px; border-radius: 6px; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div id="toolbar">
-    <select id="symbol"></select>
+    <select id="symbol-select"></select>
 </div>
 
 <div id="container"></div>
 
 <div id="pay-mask">
     <div style="font-size:18px;font-weight:bold;">🔒 最新行情已锁定</div>
-    <div style="font-size:13px;color:#aaa;margin-top:10px;">解锁查看 60 天内最新趋势</div>
+    <div style="font-size:13px;color:#aaa;margin-top:10px;">解锁查看右侧 60 天内最新趋势</div>
     <button onclick="unlock()">立即解锁</button>
 </div>
 
@@ -33,35 +33,35 @@
 <script>
 let unlocked = false;
 
-// 1. 手动定义您的 20 个品种（替代失效的 /api/symbols）
+// 1. 【核心修改】直接把品种写在这里，不求人 (api/symbols 无效)
 const SYMBOLS = [
-    { ticker: 'STAR_ANISE', name: '大红八角 (Star Anise)', symbol: 'STAR' },
-    { ticker: 'CINNAMON', name: '肉桂 (Cinnamon)', symbol: 'CINN' },
-    { ticker: 'BLACK_PEPPER', name: '黑胡椒 (Black Pepper)', symbol: 'PEPPER' }
+    { ticker: 'STAR_ANISE', name: '大红八角 (Star Anise)' },
+    { ticker: 'CINNAMON', name: '肉桂 (Cinnamon)' },
+    { ticker: 'PEPPER', name: '黑胡椒 (Black Pepper)' }
 ];
 
-// 2. 模拟数据（替代失效的 /api/history）
-function getMockData() {
+// 2. 模拟数据生成（保证网页打开就有图看）
+function generateData() {
     const list = [];
-    let price = 40;
-    const now = new Date().getTime();
-    for (let i = 0; i < 500; i++) {
+    let price = 45;
+    const now = Date.now();
+    for (let i = 0; i < 200; i++) {
         price += (Math.random() - 0.5) * 2;
         list.unshift({
             timestamp: now - i * 24 * 60 * 60 * 1000,
-            open: price, high: price + 1.5, low: price - 1.5, close: price + 0.5, volume: 500
+            open: price, high: price + 1.2, low: price - 1.2, close: price + 0.4, volume: Math.random() * 1000
         });
     }
     return list;
 }
 
-// 3. 初始化（修正后的构造函数）
+// 3. 初始化 Pro 图表
 const pro = new klinechartsPro.DefaultKLineChart({
     container: document.getElementById('container'),
     symbol: SYMBOLS[0],
     datafeed: {
         searchSymbols: () => Promise.resolve(SYMBOLS),
-        getHistoryKLineData: () => Promise.resolve(getMockData()),
+        getHistoryKLineData: () => Promise.resolve(generateData()),
         subscribe: () => {},
         unsubscribe: () => {}
     },
@@ -69,17 +69,15 @@ const pro = new klinechartsPro.DefaultKLineChart({
     locale: 'zh-CN'
 });
 
-// 4. 获取底层图表实例以实现遮罩
+// 4. 获取图表实例并订阅锁定逻辑
 const chart = pro.getWidget().getChart();
 const LOCK_DAYS = 60;
 
 chart.subscribeAction('onVisibleRangeChange', (range) => {
     if (unlocked || !range) return;
     const data = chart.getDataList();
-    if (!data.length) return;
-    
-    const rightIndex = Math.min(Math.floor(range.to), data.length - 1);
-    const rightBar = data[rightIndex];
+    if (data.length === 0) return;
+    const rightBar = data[Math.min(Math.floor(range.to), data.length - 1)];
     const latestBar = data[data.length - 1];
     
     if (rightBar && rightBar.timestamp >= (latestBar.timestamp - LOCK_DAYS * 24 * 60 * 60 * 1000)) {
@@ -94,14 +92,15 @@ function unlock() {
     document.getElementById('pay-mask').style.display = 'none';
 }
 
-// 5. 渲染下拉框
-const sel = document.getElementById('symbol');
+// 5. 初始化下拉框
+const sel = document.getElementById('symbol-select');
 SYMBOLS.forEach(s => {
     const opt = document.createElement('option');
     opt.value = s.ticker;
     opt.textContent = s.name;
     sel.appendChild(opt);
 });
+
 sel.onchange = () => {
     const s = SYMBOLS.find(i => i.ticker === sel.value);
     unlocked = false;
