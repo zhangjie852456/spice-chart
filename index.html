@@ -4,45 +4,51 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ZRC Spice Market Pro</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@klinecharts/pro/dist/klinecharts-pro.css">
+    <link rel="stylesheet" href="https://unpkg.com/@klinecharts/pro/dist/klinecharts-pro.css">
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #ffffff; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #f4f7f9; }
         #chart-container { width: 100vw; height: 100vh; }
+        /* 增加一个加载提示，防止白屏时不知道进度 */
+        #loading { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-family: sans-serif; color: #666; }
     </style>
 </head>
 <body>
+    <div id="loading">行情加载中，请稍候...</div>
     <div id="chart-container"></div>
-    <script src="https://cdn.jsdelivr.net/npm/@klinecharts/pro/dist/klinecharts-pro.umd.js"></script>
+
+    <script src="https://unpkg.com/klinecharts/dist/klinecharts.min.js"></script>
+    <script src="https://unpkg.com/@klinecharts/pro/dist/klinecharts-pro.umd.js"></script>
+
     <script>
-        // 3. 定义您的 20+ 品种名单
-        const SYMBOLS = [
-            { symbol: 'STAR', name: '大红八角 (Star Anise)', exchange: 'YULIN', market: 'SPICE', ticker: 'STAR_ANISE' },
-            { symbol: 'CINN', name: '肉桂 (Cinnamon)', exchange: 'YULIN', market: 'SPICE', ticker: 'CINNAMON' }
-            // 剩下的 20 个品种只需按此格式继续添加
-        ];
+        window.onload = function() {
+            // 隐藏加载提示
+            document.getElementById('loading').style.display = 'none';
 
-        // 4. 实现官方要求的 Datafeed 接口
-        class MyDatafeed {
-            searchSymbols() { return Promise.resolve(SYMBOLS); }
-            getHistoryKLineData() {
-                // 模拟数据：官方图表需要至少一点数据才能初始化成功
-                return Promise.resolve([
-                    { timestamp: 1704067200000, open: 32, high: 35, low: 31, close: 34, volume: 100 },
-                    { timestamp: 1704153600000, open: 34, high: 38, low: 34, close: 37, volume: 150 }
-                ]);
-            }
-            subscribe() {}
-            unsubscribe() {}
-        }
+            // 3. 您的 20 多个品种名单
+            const SYMBOLS = [
+                { symbol: 'STAR', name: '大红八角 (Star Anise)', exchange: 'YULIN', ticker: 'STAR_ANISE' },
+                { symbol: 'CINN', name: '肉桂 (Cinnamon)', exchange: 'YULIN', ticker: 'CINNAMON' },
+                { symbol: 'PEPPER', name: '黑胡椒 (Black Pepper)', exchange: 'YULIN', ticker: 'BLACK_PEPPER' }
+            ];
 
-        // 5. 初始化：这步成功了，界面就会跟您在本机看到的一模一样
-        const chart = new klinechartspro.KLineChartPro({
-            container: document.getElementById('chart-container'),
-            symbol: SYMBOLS[0],
-            datafeed: new MyDatafeed(),
-            theme: 'light',
-            locale: 'zh-CN'
-        });
+            // 4. 初始化图表 (按官方 Pro 版标准)
+            const chart = new klinechartspro.KLineChartPro({
+                container: document.getElementById('chart-container'),
+                symbol: SYMBOLS[0],
+                // 极简数据源，确保能先出图
+                datafeed: {
+                    searchSymbols: (search) => Promise.resolve(SYMBOLS),
+                    getHistoryKLineData: () => Promise.resolve([
+                        { timestamp: 1704067200000, open: 30, high: 35, low: 29, close: 33, volume: 1000 }
+                    ]),
+                    subscribe: () => {},
+                    unsubscribe: () => {}
+                },
+                theme: 'light',
+                locale: 'zh-CN'
+            });
+            console.log("图表初始化成功！");
+        };
     </script>
 </body>
 </html>
