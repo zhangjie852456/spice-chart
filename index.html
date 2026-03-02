@@ -2,72 +2,53 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>ZRC Spice Pro - K线行情终端</title>
-    <!-- 固定版本 + min 文件，避免不稳定 -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@klinecharts/pro@0.1.1/dist/klinecharts-pro.min.css">
+    <title>ZRC Spice Pro</title>
+    <link rel="stylesheet" href="https://unpkg.com/@klinecharts/pro/dist/klinecharts-pro.css">
     <style>
-        html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #1b1b1f; overflow: hidden; font-family: "Microsoft YaHei", sans-serif; }
-        #chart-container { width: 100vw; height: 100vh; }
+        /* 关键：强制占满全屏，防止高度为0 */
+        html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #1b1b1f; overflow: hidden; }
+        #chart-container { width: 100vw; height: 100vh; display: block; }
     </style>
 </head>
 <body>
-<div id="chart-container"></div>
+    <div id="chart-container"></div>
 
-<!-- 只引入 Pro min 版 -->
-<script src="https://cdn.jsdelivr.net/npm/@klinecharts/pro@0.1.1/dist/klinecharts-pro.umd.min.js"></script>
+    <script src="https://unpkg.com/klinecharts/dist/klinecharts.min.js"></script>
+    <script src="https://unpkg.com/@klinecharts/pro/dist/klinecharts-pro.umd.js"></script>
 
-<script>
-    // 调试检查
-    console.log("klinechartspro 是否存在：", typeof klinechartspro, klinechartspro);
+    <script>
+        window.onload = function() {
+            // 3. 安全检查
+            if (typeof klinechartsPro === 'undefined') {
+                document.body.innerHTML = '<h1 style="color:white;padding:20px;">JS库加载失败，请检查网络！</h1>';
+                return;
+            }
 
-    if (typeof klinechartspro === 'undefined' || !klinechartspro.KLineChartPro) {
-        alert("KLineChart Pro 全局对象未加载成功！\n1. 检查网络/翻墙访问 cdn.jsdelivr.net\n2. 试试换 unpkg CDN：https://unpkg.com/@klinecharts/pro@0.1.1/dist/klinecharts-pro.umd.min.js\n3. 清浏览器缓存重试");
-        console.error("加载失败，klinechartspro：", klinechartspro);
-    } else {
-        const chart = new klinechartspro.KLineChartPro({
-            container: document.getElementById('chart-container'),
-            symbol: {
-                ticker: 'STAR_ANISE',
-                name: '大红八角价格趋势 (USD/kg)'
-            },
-            period: {
-                multiplier: 1,
-                timespan: 'day',
-                text: '日线'
-            },
-            datafeed: {
-                // 静态模拟搜索
-                searchSymbols: () => Promise.resolve([
-                    { ticker: 'STAR_ANISE', name: '大红八角' }
-                ]),
-                // 静态历史数据（120条，确保图表有内容）
-                getHistoryKLineData: () => {
-                    const data = [];
-                    let price = 8.5;
-                    for (let i = 0; i < 120; i++) {
-                        price += (Math.random() - 0.5) * 0.25; // 小波动
-                        const ts = Date.now() - (120 - i) * 86400000;
-                        data.push({
-                            timestamp: ts,
-                            open: Number(price.toFixed(2)),
-                            high: Number((price + Math.random() * 0.4).toFixed(2)),
-                            low: Number((price - Math.random() * 0.4).toFixed(2)),
-                            close: Number((price + (Math.random() - 0.5) * 0.2).toFixed(2)),
-                            volume: Math.floor(Math.random() * 30000 + 8000)
-                        });
-                    }
-                    console.log("生成数据：", data.length, "条");
-                    return Promise.resolve(data);
+            // 4. 正确的初始化名称
+            const chartInstance = new klinechartsPro.DefaultKLineChart({
+                container: document.getElementById('chart-container'),
+                symbol: { ticker: 'STAR_ANISE', name: '大红八角' },
+                datafeed: {
+                    searchSymbols: () => Promise.resolve([{ ticker: 'STAR_ANISE', name: '大红八角' }]),
+                    getHistoryKLineData: () => {
+                        const data = [];
+                        let price = 50;
+                        for (let i = 0; i < 100; i++) {
+                            price += Math.random() - 0.5;
+                            data.push({
+                                timestamp: Date.now() - (100 - i) * 86400000,
+                                open: price, high: price + 1, low: price - 1, close: price + 0.2, volume: 100
+                            });
+                        }
+                        return Promise.resolve(data);
+                    },
+                    subscribe: () => {},
+                    unsubscribe: () => {}
                 },
-                subscribe: () => {},
-                unsubscribe: () => {}
-            },
-            theme: 'dark',
-            locale: 'zh-CN'
-        });
-
-        console.log("图表实例创建成功：", chart);
-    }
-</script>
+                theme: 'dark',
+                locale: 'zh-CN'
+            });
+        };
+    </script>
 </body>
 </html>
