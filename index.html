@@ -14,27 +14,30 @@
     <div id="chart"></div>
     <script src="https://cdn.jsdelivr.net/npm/@klinecharts/pro/dist/klinecharts-pro.umd.js"></script>
     <script>
-        // 等待库完全加载
         window.onload = function() {
+            // 3. 您的 20 多个品种名单（先列 3 个样板）
             const SYMBOLS = [
-                { symbol: 'STAR', name: '大红八角 (Star Anise)', ticker: 'STAR_ANISE' },
-                { symbol: 'CINN', name: '肉桂 (Cinnamon)', ticker: 'CINNAMON' }
+                { symbol: 'STAR', name: '大红八角 (Star Anise)', exchange: 'YULIN', ticker: 'STAR_ANISE' },
+                { symbol: 'CINN', name: '肉桂 (Cinnamon)', exchange: 'YULIN', ticker: 'CINNAMON' },
+                { symbol: 'PEPPER', name: '黑胡椒 (Black Pepper)', exchange: 'YULIN', ticker: 'BLACK_PEPPER' }
             ];
 
-            // 注意这里：klinechartsPro 的 P 必须大写
+            // 4. 使用官方指定的 UMD 初始化方式
             const chart = new klinechartsPro.DefaultKLineChart({
                 container: document.getElementById('chart'),
                 symbol: SYMBOLS[0],
                 datafeed: {
-                    searchSymbols: () => Promise.resolve(SYMBOLS),
-                    getHistoryKLineData: () => Promise.resolve([
+                    searchSymbols: (search) => Promise.resolve(SYMBOLS),
+                    getHistoryKLineData: (symbol) => Promise.resolve([
                         { timestamp: 1704067200000, open: 30, high: 35, low: 29, close: 33, volume: 1000 }
                     ]),
                     subscribe: () => {},
                     unsubscribe: () => {}
                 },
                 theme: 'light',
-                locale: 'zh-CN'
+                locale: 'zh-CN',
+                drawingBar: true, // 开启侧边画线工具
+                symbolSearch: true // 开启品种搜索框
             });
         };
     </script>
