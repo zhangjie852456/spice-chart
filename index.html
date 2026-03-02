@@ -10,42 +10,41 @@
     </style>
 </head>
 <body>
-<div id="chart-container"></div>
+    <div id="chart-container"></div>
 
-<script src="https://klinecharts.github.io/pro/klinecharts.min.js"></script>
-<script src="https://klinecharts.github.io/pro/klinecharts-pro.umd.js"></script>
+    <script src="https://klinecharts.github.io/pro/klinecharts.min.js"></script>
+    <script src="https://klinecharts.github.io/pro/klinecharts-pro.umd.js"></script>
 
-<script>
-    window.onload = function() {
-        // 检查源文件是否真的加载成功
-        if (typeof klinechartsPro === 'undefined') {
-            console.error("源文件加载失败，请检查网络是否拦截了 GitHub 域名");
-            return;
-        }
+    <script>
+        window.onload = function() {
+            // 第一步：先检查库在不在
+            if (typeof klinechartsPro === 'undefined') {
+                console.error("基础库加载失败！");
+                return;
+            }
 
-        const chartInstance = new klinechartsPro.DefaultKLineChart({
-            container: document.getElementById('chart-container'),
-            symbol: { ticker: 'STAR_ANISE', name: '大红八角 (Star Anise)' },
-            datafeed: {
-                searchSymbols: () => Promise.resolve([{ ticker: 'STAR_ANISE', name: '大红八角' }]),
-                getHistoryKLineData: () => {
-                    const data = [];
-                    let price = 50;
-                    const now = Date.now();
-                    for (let i = 0; i < 200; i++) {
-                        price += (Math.random() - 0.5) * 2;
-                        data.unshift({
-                            timestamp: now - i * 86400000,
-                            open: price, high: price + 1.5, low: price - 1.5, close: price + 0.6, volume: 500
-                        });
+            // 第二步：极简初始化
+            const chart = new klinechartsPro.DefaultKLineChart({
+                container: document.getElementById('chart-container'),
+                symbol: { ticker: 'STAR_ANISE', name: '大红八角' },
+                datafeed: {
+                    searchSymbols: () => Promise.resolve([{ ticker: 'STAR_ANISE', name: '大红八角' }]),
+                    getHistoryKLineData: () => {
+                        const data = [];
+                        let price = 60;
+                        for (let i = 0; i < 100; i++) {
+                            price += Math.random() - 0.5;
+                            data.push({
+                                timestamp: Date.now() - (100 - i) * 86400000,
+                                open: price, high: price + 1, low: price - 1, close: price + 0.2, volume: 100
+                            });
+                        }
+                        return Promise.resolve(data);
                     }
-                    return Promise.resolve(data);
-                }
-            },
-            theme: 'dark',
-            locale: 'zh-CN'
-        });
-    };
-</script>
+                },
+                theme: 'dark'
+            });
+        };
+    </script>
 </body>
 </html>
