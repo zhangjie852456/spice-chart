@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>ZRC Spice Pro 终端</title>
+    <title>ZRC 香料行情终端 · Pro</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@klinecharts/pro/dist/klinecharts-pro.css">
     <style>
         html, body { margin: 0; padding: 0; width: 100%; height: 100%; background: #1b1b1f; overflow: hidden; }
@@ -28,54 +28,59 @@
 <script>
     let isUnlocked = false;
 
-    // 模拟 20 个品种的数据，直接内置
-    function getMockData() {
+    // 预设 20 个品种的本地数据（彻底解决 GitHub 不支持 API 的问题）
+    function generateMockData() {
         const data = [];
-        let price = 40;
+        let price = 45.5;
         const now = Date.now();
-        for (let i = 0; i < 300; i++) {
-            price += (Math.random() - 0.5) * 2;
+        for (let i = 0; i < 400; i++) {
+            price += (Math.random() - 0.5) * 2.5;
             data.unshift({
                 timestamp: now - i * 24 * 60 * 60 * 1000,
-                open: price, high: price + 1, low: price - 1, close: price + 0.5, volume: 1000
+                open: price, high: price + 1.5, low: price - 1.5, close: price + 0.8, volume: 800
             });
         }
         return data;
     }
 
-    // 确保 DOM 加载后初始化
+    // 等待库文件加载完毕
     window.onload = function() {
-        // 3. 构造函数必须匹配 UMD 名称
-        const chartInstance = new klinechartsPro.DefaultKLineChart({
-            container: document.getElementById('chart-container'),
-            symbol: { ticker: 'STAR_ANISE', name: '大红八角 (Star Anise)' },
-            datafeed: {
-                searchSymbols: () => Promise.resolve([{ ticker: 'STAR_ANISE', name: '大红八角' }]),
-                getHistoryKLineData: () => Promise.resolve(getMockData()),
-                subscribe: () => {},
-                unsubscribe: () => {}
-            },
-            theme: 'dark',
-            locale: 'zh-CN'
-        });
+        try {
+            // 3. 这里的 P 大写是官方仓库 UMD 模式的正确入口
+            const chartInstance = new klinechartsPro.DefaultKLineChart({
+                container: document.getElementById('chart-container'),
+                symbol: { ticker: 'STAR_ANISE', name: '大红八角 (Star Anise)' },
+                datafeed: {
+                    searchSymbols: () => Promise.resolve([{ ticker: 'STAR_ANISE', name: '大红八角' }]),
+                    getHistoryKLineData: () => Promise.resolve(generateMockData()),
+                    subscribe: () => {},
+                    unsubscribe: () => {}
+                },
+                theme: 'dark',
+                locale: 'zh-CN'
+            });
 
-        // 4. 稳健的遮罩逻辑
-        const chart = chartInstance.getWidget().getChart();
-        chart.subscribeAction('onVisibleRangeChange', (range) => {
-            if (isUnlocked || !range) return;
-            const dataList = chart.getDataList();
-            if (dataList.length === 0) return;
+            // 4. 稳健的锁定逻辑
+            const chart = chartInstance.getWidget().getChart();
+            chart.subscribeAction('onVisibleRangeChange', (range) => {
+                if (isUnlocked || !range) return;
+                const dataList = chart.getDataList();
+                if (dataList.length === 0) return;
 
-            const lastData = dataList[dataList.length - 1];
-            const lockThreshold = lastData.timestamp - (60 * 24 * 60 * 60 * 1000);
-            const rightBar = dataList[Math.min(Math.floor(range.to), dataList.length - 1)];
+                const lastData = dataList[dataList.length - 1];
+                const lockThreshold = lastData.timestamp - (60 * 24 * 60 * 60 * 1000);
+                const rightBar = dataList[Math.min(Math.floor(range.to), dataList.length - 1)];
 
-            if (rightBar && rightBar.timestamp > lockThreshold) {
-                document.getElementById('pay-mask').style.display = 'flex';
-            } else {
-                document.getElementById('pay-mask').style.display = 'none';
-            }
-        });
+                if (rightBar && rightBar.timestamp > lockThreshold) {
+                    document.getElementById('pay-mask').style.display = 'flex';
+                } else {
+                    document.getElementById('pay-mask').style.display = 'none';
+                }
+            });
+        } catch (e) {
+            console.error("图表初始化失败:", e);
+            alert("图表加载失败，请按 Ctrl+F5 刷新");
+        }
     };
 
     function unlock() {
