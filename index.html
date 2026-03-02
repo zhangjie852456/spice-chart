@@ -1,55 +1,49 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
     <meta charset="utf-8" />
-    <title>ZRC Spice Market Insight Pro</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZRC Spice Pro</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@klinecharts/pro/dist/klinecharts-pro.css">
-    <script src="https://cdn.jsdelivr.net/npm/@klinecharts/pro/dist/klinecharts-pro.umd.js"></script>
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; }
-        #chart-container { width: 100%; height: 100vh; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #fff; }
+        #chart { width: 100vw; height: 100vh; }
     </style>
 </head>
 <body>
-    <div id="chart-container"></div>
+    <div id="chart"></div>
+    <script src="https://cdn.jsdelivr.net/npm/@klinecharts/pro/dist/klinecharts-pro.umd.js"></script>
     <script>
-        // 负责人，这里就是你 20 多个品种的数据中心
-        const SPICE_DATA = {
-            'STAR_ANISE': [
-                { timestamp: 1704067200000, open: 32.5, high: 35.0, low: 32.0, close: 34.0, volume: 1000 },
-                { timestamp: 1704153600000, open: 34.0, high: 36.5, low: 33.5, close: 35.8, volume: 1200 }
-            ],
-            'CINNAMON': [
-                { timestamp: 1704067200000, open: 18.2, high: 19.5, low: 18.0, close: 19.0, volume: 800 },
-                { timestamp: 1704153600000, open: 19.0, high: 20.2, low: 18.8, close: 19.8, volume: 950 }
-            ]
-            // 剩下的 20 个品种，回头咱们直接往这里加就行
-        };
+        // 3. 这里就是你要的 20 多个品种的名单
+        const SYMBOLS = [
+            { symbol: 'STAR', name: '大红八角 (Star Anise)', ticker: 'STAR_ANISE' },
+            { symbol: 'CINN', name: '肉桂 (Cinnamon)', ticker: 'CINNAMON' },
+            { symbol: 'PEPPER', name: '黑胡椒 (Black Pepper)', ticker: 'BLACK_PEPPER' }
+            // 剩下的 20 个品种，直接按这个格式往里加
+        ];
 
-        class SpiceDatafeed {
-            searchSymbols(search) {
-                // 支持搜索 20 多个品种
+        class CustomDatafeed {
+            searchSymbols() { return Promise.resolve(SYMBOLS); }
+            getHistoryKLineData(symbol) {
+                // 这里暂时给演示数据，等图出来了，我教你一次性导入 Excel 真实价格
                 return Promise.resolve([
-                    { symbol: 'STAR', name: '大红八角 (Star Anise)', exchange: 'YULIN', ticker: 'STAR_ANISE' },
-                    { symbol: 'CINN', name: '肉桂 (Cinnamon)', exchange: 'YULIN', ticker: 'CINNAMON' }
+                    { timestamp: 1704067200000, open: 32, high: 35, low: 31, close: 34, volume: 100 },
+                    { timestamp: 1704153600000, open: 34, high: 38, low: 34, close: 37, volume: 150 }
                 ]);
-            }
-            getHistoryKLineData(symbol, period, from, to) {
-                const data = SPICE_DATA[symbol.ticker] || [];
-                return Promise.resolve(data);
             }
             subscribe() {}
             unsubscribe() {}
         }
 
+        // 4. 初始化。这就是你在本地看到的一模一样的官方界面
         const chart = new klinechartspro.KLineChartPro({
-            container: document.getElementById('chart-container'),
-            symbol: { exchange: 'YULIN', market: 'SPICE', name: '大红八角', ticker: 'STAR_ANISE', priceCurrency: 'CNY' },
-            datafeed: new SpiceDatafeed(),
+            container: document.getElementById('chart'),
+            symbol: SYMBOLS[0], // 默认显示第一个（八角）
+            datafeed: new CustomDatafeed(),
             theme: 'light',
             locale: 'zh-CN',
-            drawingBar: true, // 开启侧边画线工具，方便客户分析
-            symbolSearch: true // 开启搜索，方便在 20 多个品种间切换
+            drawingBar: true, // 开启侧边画线工具
+            symbolSearch: true // 开启搜索，方便在 20 个品种间切换
         });
     </script>
 </body>
