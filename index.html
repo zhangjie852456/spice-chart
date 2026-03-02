@@ -3,29 +3,29 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ZRC Spice Pro</title>
+    <title>ZRC Spice Market Pro</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@klinecharts/pro/dist/klinecharts-pro.css">
     <style>
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #fff; }
-        #chart { width: 100vw; height: 100vh; }
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #ffffff; }
+        #chart-container { width: 100vw; height: 100vh; }
     </style>
 </head>
 <body>
-    <div id="chart"></div>
+    <div id="chart-container"></div>
     <script src="https://cdn.jsdelivr.net/npm/@klinecharts/pro/dist/klinecharts-pro.umd.js"></script>
     <script>
-        // 3. 这里就是你要的 20 多个品种的名单
+        // 3. 定义您的 20+ 品种名单
         const SYMBOLS = [
-            { symbol: 'STAR', name: '大红八角 (Star Anise)', ticker: 'STAR_ANISE' },
-            { symbol: 'CINN', name: '肉桂 (Cinnamon)', ticker: 'CINNAMON' },
-            { symbol: 'PEPPER', name: '黑胡椒 (Black Pepper)', ticker: 'BLACK_PEPPER' }
-            // 剩下的 20 个品种，直接按这个格式往里加
+            { symbol: 'STAR', name: '大红八角 (Star Anise)', exchange: 'YULIN', market: 'SPICE', ticker: 'STAR_ANISE' },
+            { symbol: 'CINN', name: '肉桂 (Cinnamon)', exchange: 'YULIN', market: 'SPICE', ticker: 'CINNAMON' }
+            // 剩下的 20 个品种只需按此格式继续添加
         ];
 
-        class CustomDatafeed {
+        // 4. 实现官方要求的 Datafeed 接口
+        class MyDatafeed {
             searchSymbols() { return Promise.resolve(SYMBOLS); }
-            getHistoryKLineData(symbol) {
-                // 这里暂时给演示数据，等图出来了，我教你一次性导入 Excel 真实价格
+            getHistoryKLineData() {
+                // 模拟数据：官方图表需要至少一点数据才能初始化成功
                 return Promise.resolve([
                     { timestamp: 1704067200000, open: 32, high: 35, low: 31, close: 34, volume: 100 },
                     { timestamp: 1704153600000, open: 34, high: 38, low: 34, close: 37, volume: 150 }
@@ -35,15 +35,13 @@
             unsubscribe() {}
         }
 
-        // 4. 初始化。这就是你在本地看到的一模一样的官方界面
+        // 5. 初始化：这步成功了，界面就会跟您在本机看到的一模一样
         const chart = new klinechartspro.KLineChartPro({
-            container: document.getElementById('chart'),
-            symbol: SYMBOLS[0], // 默认显示第一个（八角）
-            datafeed: new CustomDatafeed(),
+            container: document.getElementById('chart-container'),
+            symbol: SYMBOLS[0],
+            datafeed: new MyDatafeed(),
             theme: 'light',
-            locale: 'zh-CN',
-            drawingBar: true, // 开启侧边画线工具
-            symbolSearch: true // 开启搜索，方便在 20 个品种间切换
+            locale: 'zh-CN'
         });
     </script>
 </body>
